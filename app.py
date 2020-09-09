@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template
 import config
+from utility import common_utility
 import json
 from bson import ObjectId
 
@@ -22,7 +23,11 @@ collection = dataBase['emp']
 
 @app.route('/')
 def home_page():
-    return render_template("index.html")
+
+    # getdata
+    db_data = common_utility.get_data()
+
+    return render_template("employees_data.html", users=db_data)
 
 
 @app.route('/insert', methods=['POST'])
@@ -34,6 +39,8 @@ def insert_emp_data():
             name = request.form["name"]
             phone = request.form["phone"]
             age = request.form["age"]
+
+            print("-------name--------", name)
 
             # postgres
             insert_query = '''INSERT INTO empdata(name, phone, age) VALUES (%s,%s,%s)'''
@@ -50,7 +57,10 @@ def insert_emp_data():
 
             print("--------data inserted into mongodb----------")
 
-            return render_template("index.html", result=result)
+            # getdata
+            db_data = common_utility.get_data()
+
+            return render_template("employees_data.html", users=db_data)
 
     except Exception as error:
         print("Error while inserting data into database", error)
@@ -68,8 +78,6 @@ def get_emp_data():
         db_data = []
 
         for result in result1:
-
-            print(len(result))
 
             postgres_db_data = {
                 "_id": id(result[0]),
@@ -117,28 +125,7 @@ def update_emp_info():
         print("data updated successfully in mongodb")
 
         # getdata
-        cursor.execute('''select * from empdata''')
-
-        result1 = cursor.fetchall()
-
-        db_data = []
-
-        for result in result1:
-
-            postgres_db_data = {
-                "_id": id(result[0]),
-                "name": result[0],
-                "phone": result[1],
-                "age": result[2]
-            }
-
-            db_data.append(postgres_db_data)
-
-        obj = collection.find()
-
-        for data in obj:
-
-            db_data.append(data)
+        db_data = common_utility.get_data()
 
         return render_template("employees_data.html", users=db_data)
 
@@ -171,34 +158,8 @@ def delete_emp_info():
 
         print("record deleted successfully from mongodb")
 
-        # get_data
-
-        cursor.execute('''select * from empdata''')
-
-        result1 = cursor.fetchall()
-
-        db_data = []
-
-        for result in result1:
-
-            print("-----result-----", result)
-
-            postgres_db_data = {
-                "_id": id(result[0]),
-                "name": result[0],
-                "phone": result[1],
-                "age": result[2]
-            }
-
-            db_data.append(postgres_db_data)
-
-        obj = collection.find()
-
-        # db_data = []
-
-        for data in obj:
-
-            db_data.append(data)
+        # getdata
+        db_data = common_utility.get_data()
 
         return render_template("employees_data.html", users=db_data)
 
